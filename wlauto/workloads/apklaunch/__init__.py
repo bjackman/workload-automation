@@ -63,6 +63,8 @@ class ApkLaunchWorkload(Workload):
         self.device.dump_logcat(os.path.join(context.output_directory, "logcat.txt"))
 
     def teardown(self, context):
+        self.logger.info('Stopping {}'.format(self.package))
+        self.device.execute('am force-stop {}'.format(self.package))
         if self.uninstall_required:
             self.logger.info('Uninstalling {}'.format(self.package))
             self.device.execute('pm uninstall {}'.format(self.package))
