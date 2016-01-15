@@ -50,7 +50,8 @@ class ApkLaunchWorkload(Workload):
     def run(self, context):
         self.device.clear_logcat()
         self.logger.info('Starting {}'.format(self.package))
-        self.device.execute('am start -W {}'.format(self.package))
+        self.device.execute(
+            'monkey -p {} -c android.intent.category.LAUNCHER 1'.format(self.package))
 
         self.logger.info('Waiting {} seconds'.format(self.wait_time_seconds))
         sleep(self.wait_time_seconds)
