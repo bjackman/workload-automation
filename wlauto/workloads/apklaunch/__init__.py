@@ -15,6 +15,7 @@
 
 import os
 
+from tempfile import NamedTemporaryFile
 from time import sleep
 
 from wlauto import Workload, Parameter
@@ -47,6 +48,7 @@ class ApkLaunchWorkload(Workload):
         return self.device.install(apk_file)
 
     def run(self, context):
+        self.device.clear_logcat()
         self.logger.info('Starting {}'.format(self.package))
         self.device.execute('am start -W {}'.format(self.package))
 
@@ -56,6 +58,8 @@ class ApkLaunchWorkload(Workload):
     def update_result(self, context):
         app_is_running = bool([p for p in self.device.ps() if p.name == self.package])
         context.result.add_metric('ran_successfully', app_is_running)
+
+        self.device.dump_logcat(os.path.join(context.output_directory, "logcat.txt"))
 
     def teardown(self, context):
         if self.uninstall_required:
