@@ -45,7 +45,7 @@ class ApkLaunchWorkload(Workload):
         self.package = ApkInfo(apk_file).package
 
         self.logger.info('Installing {}'.format(apk_file))
-        return self.device.install(apk_file)
+        return self.device.install(apk_file, timeout=120)
 
     def run(self, context):
         self.device.clear_logcat()
