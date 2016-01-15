@@ -56,7 +56,7 @@ class ApkLaunchWorkload(Workload):
         sleep(self.wait_time_seconds)
 
     def update_result(self, context):
-        app_is_running = bool([p for p in self.device.ps() if p.name == self.package])
+        app_is_running = bool(self.device.get_pids_of(self.package))
         context.result.add_metric('ran_successfully', app_is_running)
 
         self.device.dump_logcat(os.path.join(context.output_directory, "logcat.txt"))
