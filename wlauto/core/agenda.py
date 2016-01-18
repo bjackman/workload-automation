@@ -189,6 +189,8 @@ class Agenda(object):
                     self._assign_id_if_needed(s, 'section')
                     self.sections.append(AgendaSectionEntry(self, **s))
             elif k == 'workloads':
+                if not v:
+                    raise ConfigError('Empty workloads entry in {}'.format(self.filepath))
                 self._collect_existing_ids(v, 'workload')
                 for w in v:
                     self.workloads.append(self.get_workload_entry(w))
