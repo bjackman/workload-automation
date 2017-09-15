@@ -160,6 +160,6 @@ class FpsInstrument(Instrument):
             ratio = frames / expected_frames
             self.logger.debug('actual/expected frames: {:.2}'.format(ratio))
             if ratio < self.crash_threshold:
-                self.logger.error('Content for {} appears to have crashed.'.format(context.spec.label))
+                self.logger.error('Content for {} appears to have crashed.'.format(context.current_job.spec.label))
                 context.add_event('Content crash detected (actual/expected frames: {:.2}).'.format(ratio))
                 context.set_status('FAILED')
