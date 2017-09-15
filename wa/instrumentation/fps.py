@@ -39,7 +39,7 @@ class FpsInstrument(Instrument):
                   constitute "real" gameplay. The assumption being that while
                   actually running, the FPS in the game will not drop below X
                   frames per second, except on loading screens, menus, etc,
-                  which should not contribute to FPS calculation. 
+                  which should not contribute to FPS calculation.
                   """),
         Parameter('keep_raw', kind=bool, default=False,
                   description="""
@@ -95,7 +95,7 @@ class FpsInstrument(Instrument):
             collector_target_attr = 'package'
         else:
             collector_target_attr = 'view'
-        collector_target = getattr(context.workload, collector_target_attr)
+        collector_target = getattr(context.workload, collector_target_attr, None)
 
         if not collector_target:
             self._is_enabled = False
