@@ -114,8 +114,6 @@ class ConfigManager(object):
 
     def generate_jobs(self, context):
         job_specs = self.jobs_config.generate_job_specs(context.tm)
-        for s in job_specs:
-            print 'job spec: {}'.format(s)
         exec_order = self.run_config.execution_order
         log.indent()
         for spec, i in permute_iterations(job_specs, exec_order):

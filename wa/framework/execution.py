@@ -276,7 +276,6 @@ class Executor(object):
 
         self.logger.info('Generating jobs')
         config_manager.generate_jobs(context)
-        print 'done generating jobs'
         output.write_job_specs(config_manager.job_specs)
         output.write_state()
 

@@ -103,16 +103,11 @@ class PluginCache(object):
         config = obj_dict(not_in_dict=['name'])
         config.name = plugin_name
 
-        print 1
-
         if plugin_name not in GENERIC_CONFIGS:
             self._set_plugin_defaults(plugin_name, config)
             self._set_from_global_aliases(plugin_name, config)
 
-        print 2
-
         if generic_name is None:
-            print 3
             # Perform a simple merge with the order of sources representing
             # priority
             plugin_config = self.plugin_configs[plugin_name]
@@ -123,7 +118,6 @@ class PluginCache(object):
                 for name, value in plugin_config[source].iteritems():
                     cfg_points[name].set_value(config, value=value)
         else:
-            print 4
             # A more complicated merge that involves priority of sources and
             # specificity
             self._merge_using_priority_specificity(plugin_name, generic_name, config)
@@ -207,7 +201,6 @@ class PluginCache(object):
 
         for source in sources:
             try:
-                print 'updating from {}'.format(source)
                 update_config_from_source(final_config, source, ms)
             except ConfigError as e:
                 raise ConfigError('Error in "{}":\n\t{}'.format(source, str(e)))
@@ -230,11 +223,9 @@ class MergeState(object):
 
 
 def update_config_from_source(final_config, source, state):
-    print 100
     if source in state.generic_config:
         final_config.name = state.generic_name
         for name, cfg_point in state.cfg_points.iteritems():
-            print 'config: {}'.format(name, cfg_point)
             if name in state.generic_config[source]:
                 if name in state.seen_specific_config:
                     msg = ('"{generic_name}" configuration "{config_name}" has '
@@ -246,30 +237,23 @@ def update_config_from_source(final_config, source, state):
                                         specific_name=specific_name,
                                         sources=", ".join(seen_sources))
                     raise ConfigError(msg)
-                print 'popping {} from {}'.format(name, state.generic_config[source])
                 value = state.generic_config[source].pop(name)
-                print 'setting value (1) final_config={} value={}'.format(final_config, value)
                 cfg_point.set_value(final_config, value, check_mandatory=False)
 
         if state.generic_config[source]:
             msg = 'Unexpected values for {}: {}'
             raise ConfigError(msg.format(state.generic_name,
                                          state.generic_config[source]))
-    print 200
 
     if source in state.specific_config:
         final_config.name = state.specific_name
         for name, cfg_point in state.cfg_points.iteritems():
-            print 'config: {}'.format(name, cfg_point)
             if name in state.specific_config[source]:
                 seen_state.specific_config[name].append(str(source))
                 value = state.specific_config[source].pop(name)
-                print 'setting value (2) final_config={} value={}'.format(final_config, value)
                 cfg_point.set_value(final_config, value, check_mandatory=False)
 
         if state.specific_config[source]:
             msg = 'Unexpected values for {}: {}'
             raise ConfigError(msg.format(state.specific_name,
                                          state.specific_config[source]))
-
-    print 300
