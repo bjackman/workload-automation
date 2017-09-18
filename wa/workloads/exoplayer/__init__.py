@@ -54,8 +54,8 @@ class ExoPlayer(ApkWorkload):
         Parameter('version', allowed_values=versions, default=versions[-1], override=True),
         Parameter(name='media_file',
                   # TODO mandatory params not working??
-                  mandatory=True,
-                  # default='/data/local/tmp/bbb_sunflower_1080p_30fps_normal.mp4',
+                  # mandatory=True,
+                  default='/data/local/tmp/bbb_sunflower_1080p_30fps_normal.mp4',
                   description='Video file to play'),
         Parameter('from_device', default=False, description='Whether file to play is already on the device'),
         Parameter('play_duration_s', kind=int,
