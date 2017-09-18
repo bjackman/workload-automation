@@ -252,6 +252,7 @@ class ConfigurationPoint(object):
         return False
 
     def set_value(self, obj, value=None, check_mandatory=True):
+        print 'set value on {} to {}'.format(self.name, value)
         if value is None:
             if self.default is not None:
                 value = self.default
@@ -903,6 +904,7 @@ class JobSpec(Configuration):
         self.to_merge = defaultdict(OrderedDict)
         self._sources = []
         self.id = None
+        print 'constructed JobSpec'
 
     def to_pod(self):
         pod = super(JobSpec, self).to_pod()
@@ -927,8 +929,10 @@ class JobSpec(Configuration):
 
     def merge_workload_parameters(self, plugin_cache):
         # merge global generic and specific config
+        print 'about to get_plugin_config'
         workload_params = plugin_cache.get_plugin_config(self.workload_name,
                                                          generic_name="workload_parameters")
+        print 'merging workload params: {}'.format(workload_params)
 
         cfg_points = plugin_cache.get_plugin_parameters(self.workload_name)
         for source in self._sources:
@@ -1041,9 +1045,11 @@ class JobGenerator(object):
                 sections.insert(0, ancestor)
 
             for workload_entry in workload_entries:
+                print 'creating job spec from {}'.format(workload_entry)
                 job_spec = create_job_spec(workload_entry, sections,
                                            target_manager, self.plugin_cache,
                                            self.disabled_instruments)
+                print 'done'
                 if self.ids_to_run:
                     for job_id in self.ids_to_run:
                         if job_id in job_spec.id:

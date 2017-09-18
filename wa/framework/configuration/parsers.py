@@ -45,23 +45,29 @@ class ConfigParser(object):
 
             # Get WA core configuration
             for cfg_point in state.settings.configuration.itervalues():
+                print 'core config: {}'.format(cfg_point.name)
                 value = pop_aliased_param(cfg_point, raw)
                 if value is not None:
                     state.settings.set(cfg_point.name, value)
 
             # Get run specific configuration
             for cfg_point in state.run_config.configuration.itervalues():
+                print 'run config: {}'.format(cfg_point.name)
                 value = pop_aliased_param(cfg_point, raw)
                 if value is not None:
                     state.run_config.set(cfg_point.name, value)
 
             # Get global job spec configuration
             for cfg_point in JobSpec.configuration.itervalues():
+                print 'job config: {}'.format(cfg_point.name)
+                if cfg_point.name == 'workload_parameters':
+                    print cfg_point
                 value = pop_aliased_param(cfg_point, raw)
                 if value is not None:
                     state.jobs_config.set_global_value(cfg_point.name, value)
 
             for name, values in raw.iteritems():
+                print 'add raw: {}'.format(name)
                 # Assume that all leftover config is for a plug-in or a global
                 # alias it is up to PluginCache to assert this assumption
                 state.plugin_cache.add_configs(name, values, source)
@@ -149,6 +155,7 @@ class AgendaParser(object):
         for workload_entry in global_workloads:
             workload = _process_workload_entry(workload_entry, seen_wkl_ids,
                                                state.jobs_config)
+            print 'processed workload: {}'.format(workload)
             state.jobs_config.add_workload(workload)
 
     def _process_sections(self, state, sections, seen_sect_ids, seen_wkl_ids):
@@ -292,6 +299,7 @@ def _get_workload_entry(workload):
 
 
 def _process_workload_entry(workload, seen_workload_ids, jobs_config):
+    print 'processing {} jobs_config={} seen_workload_ids={}'.format(workload, seen_workload_ids, jobs_config)
     workload = _get_workload_entry(workload)
     workload = _construct_valid_entry(workload, seen_workload_ids,
                                       "wk", jobs_config)
