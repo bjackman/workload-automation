@@ -92,6 +92,8 @@ class FpsInstrument(Instrument):
     def setup(self, context):
         use_gfxinfo = self.target.get_sdk_version() >= 23 and not self.force_surfaceflinger
         if use_gfxinfo:
+            if hasattr(context.workload, 'package_to_instrument'):
+                collector_target_attr = 'package_to_instrument'
             collector_target_attr = 'package'
         else:
             collector_target_attr = 'view'

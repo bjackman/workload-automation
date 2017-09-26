@@ -39,6 +39,10 @@ class UbSystemUiJankTests(ApkWorkload):
 
     package_names = ['android.platform.systemui.tests.jank']
 
+    # This workload's APK just triggers UI actions - we want to instrument the
+    # System UI, not the thing we're actually running.
+    package_to_instrument = 'com.android.systemui'
+
     tests = [
         'LauncherJankTests#testOpenAllAppsContainer',
         'LauncherJankTests#testAllAppsContainerSwipe',
