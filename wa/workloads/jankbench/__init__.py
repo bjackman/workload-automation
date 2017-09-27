@@ -13,11 +13,13 @@
 # limitations under the License.
 #
 
+import csv
 import os
 import re
 import subprocess
 import threading
 import select
+import sqlite3
 
 from wa import Parameter, ApkWorkload
 from wa.framework.exception import WorkloadError
@@ -33,10 +35,14 @@ class Jankbench(ApkWorkload):
     database. This  is believed to be a good proxy for the smoothness of user
     experience.
 
-    Does not report any score but simply dumps a JankbenchResults.sqlite file in
-    the output directory. This database contains a table 'ui_results' with a row
-    for each frame, showing its rendering time in ms in the 'total_duration'
-    column, and whether or not it was a jank frame in the 'jank_frame' column.
+    Dumps a JankbenchResults.sqlite file in the output directory. This database
+    contains a table 'ui_results' with a row for each frame, showing its
+    rendering time in ms in the 'total_duration' column, and whether or not it
+    was a jank frame in the 'jank_frame' column.
+
+    This information is also extracted from the SQLite file and dumped as
+    jankbench_frames.csv. This is _not_ necessarily the same information as
+    provided by gfxinfo (fps instrument).
     """
 
     versions = ['1.0']
@@ -110,10 +116,22 @@ class Jankbench(ApkWorkload):
         self.monitor.wait_for_run_end(self.run_timeout)
 
     def extract_results(self, context):
+        # TODO make these artifacts where they should be
         super(Jankbench, self).extract_results(context)
         host_db_path =  os.path.join(context.output_directory,
                                      'BenchmarkResults.sqlite')
         self.target.pull(self.target_db_path, host_db_path, as_root=True)
+
+        columns = ['_id', 'name', 'run_id', 'iteration', 'total_duration', 'jank_frame']
+        query = 'SELECT {} FROM ui_results'.format(','.join(columns))
+        conn = sqlite3.connect(os.path.join(host_db_path))
+
+        csv_path = os.path.join(context.output_directory, 'jankbench_frames.csv')
+        with open(csv_path, 'wb') as f:
+            writer = csv.writer(f)
+            writer.writerow(columns)
+            for db_row in conn.execute(query):
+                writer.writerow(db_row)
 
 # TODO: Use logcat monitor from devlib
 class JbRunMonitor(threading.Thread):
