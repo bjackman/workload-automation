@@ -141,6 +141,7 @@ class ExoPlayer(ApkWorkload):
                 return files[0]
 
     def init_resources(self, context):
+        self.validate()
         ensure_directory_exists(self.video_directory)
         self.host_video_file = self._find_host_video_file()
 
