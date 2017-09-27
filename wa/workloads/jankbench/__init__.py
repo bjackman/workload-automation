@@ -123,15 +123,22 @@ class Jankbench(ApkWorkload):
         self.target.pull(self.target_db_path, host_db_path, as_root=True)
 
         columns = ['_id', 'name', 'run_id', 'iteration', 'total_duration', 'jank_frame']
+        jank_frame_idx = columns.index('jank_frame')
         query = 'SELECT {} FROM ui_results'.format(','.join(columns))
         conn = sqlite3.connect(os.path.join(host_db_path))
 
         csv_path = os.path.join(context.output_directory, 'jankbench_frames.csv')
+        jank_frames = 0
         with open(csv_path, 'wb') as f:
             writer = csv.writer(f)
             writer.writerow(columns)
             for db_row in conn.execute(query):
                 writer.writerow(db_row)
+                if int(db_row[jank_frame_idx]):
+                    jank_frames += 1
+
+        context.add_metric('jankbench_jank_frames', jank_frames,
+                           lower_is_better=True)
 
 # TODO: Use logcat monitor from devlib
 class JbRunMonitor(threading.Thread):
