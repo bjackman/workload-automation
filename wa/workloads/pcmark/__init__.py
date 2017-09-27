@@ -15,7 +15,10 @@
 # limitations under the License.
 #
 
+import os
+import re
 import time
+from zipfile import ZipFile
 
 from wa import Parameter, Workload
 from wa.framework.exception import WorkloadError
@@ -54,24 +57,29 @@ class PcMark(Workload):
     def initialize(self, context):
         super(PcMark, self).initialize(context)
 
+        # Need root to get results
+        if not self.target.is_rooted:
+            raise WorkloadError('PCMark workload requires device to be rooted')
+
         if not self.target.is_installed(self.package):
             raise WorkloadError('Not installed') # TODO instruccies
 
-        path = ('/storage/sdcard0/Android/data/{}/files/dlc/pcma-workv2-data'
+        path = ('/storage/emulated/0/Android/data/{}/files/dlc/pcma-workv2-data'
                 .format(self.package))
         if not self.target.file_exists(path):
-            raise WorkloadError('Not installed') # TODO INSTRUCCIES
+            raise WorkloadError('Not installed 2') # TODO INSTRUCCIES
 
     def setup(self, context):
         super(PcMark, self).setup(context)
 
-        self.command = 'am start -n {}/{}'.format(self.package, self.activity)
-
         self.target.execute('am kill-all')  # kill all *background* activities
+        self.target.execute('am start -n {}/{}'.format(self.package, self.activity))
+        time.sleep(5)
 
         # Move to benchmark run page
+        self.target.screen.set_orientation(portrait=False) # Needed to make TAB work
         self.target.execute('input keyevent KEYCODE_TAB')
-        time.sleep(5)
+        self.target.execute('input keyevent KEYCODE_TAB')
 
         self.monitor = self.target.get_logcat_monitor()
         self.monitor.start()
@@ -83,11 +91,30 @@ class PcMark(Workload):
 
         [self.output] = self.monitor.wait_for(REGEXPS['result'], timeout=600)
 
-    def update_output(self, context):
+    def extract_results(self, context):
+        # TODO should this be an artifact?
         remote_zip_path = re.match(REGEXPS['result'], self.output).group('path')
         local_zip_path = os.path.join(context.output_directory,
-                                      self.target.path.basename(remote_archive))
-        self.target.pull(remote_zip_path, local_zip_path)
+                                      self.target.path.basename(remote_zip_path))
+        print 'pulling {} -> {}'.format(remote_zip_path, local_zip_path)
+        self.target.pull(remote_zip_path, local_zip_path, as_root=True)
+
+        print 'extracting'
+        with ZipFile(local_zip_path, 'r') as archive:
+            archive.extractall(context.output_directory)
+
+        # Fetch workloads names and scores
+        score_regex = re.compile('\s*<result_Pcma(?P<name>.*)Score>(?P<score>[0-9]*)<')
+        with open(os.path.join(context.output_directory, 'Result.xml')) as f:
+            for line in f:
+                match = score_regex.match(line)
+                if match:
+                    print 'MATCH'
+                    metric_name = 'pcmark_{}'.format(match.group('name'))
+                    print(metric_name)
+                    print(match.group('score'))
+                    context.add_metric(metric_name, match.group('score'))
+
 
     def teardown(self, context):
         super(PcMark, self).teardown(context)
