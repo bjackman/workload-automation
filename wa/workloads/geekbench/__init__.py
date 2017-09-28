@@ -120,6 +120,17 @@ class Geekbench(ApkUiautoWorkload):
 
     def initialize(self, context):
         super(Geekbench, self).initialize(context)
+
+        # HACK: There may be devices we must not run Geekbench on, in case
+        # they phone home. Let's just whitelist the ones we know are safe.
+        product = self.target.getprop('ro.product.name')
+        if product not in ['hikey960', 'marlin', 'sailfish']:
+            raise WorkloadError(
+                "This device reported its product name as '{}', which has not "
+                "been whitelisted to run Geekbench. If you're absolutely sure "
+                "it's OK to run geekbench on your device, add '{}' to this code's "
+                "whitelist.".format(product, product))
+
         if not self.target.is_rooted:
             raise WorkloadError(
                 'Geekbench workload requires root to collect results')
