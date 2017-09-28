@@ -77,7 +77,7 @@ class PcMark(Workload):
         time.sleep(5)
 
         # Move to benchmark run page
-        self.target.screen.set_orientation(portrait=False) # Needed to make TAB work
+        self.target.set_left_rotation() # Needed to make TAB work
         self.target.execute('input keyevent KEYCODE_TAB')
         self.target.execute('input keyevent KEYCODE_TAB')
 
