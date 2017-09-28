@@ -51,7 +51,7 @@ class Jankbench(ApkWorkload):
 
     target_db_path = '/data/data/{}/databases/BenchmarkResults'.format(package)
 
-    benchmark_ids = {
+    test_ids = {
         'list_view'         : 0,
         'image_list_view'   : 1,
         'shadow_grid'       : 2,
@@ -61,8 +61,8 @@ class Jankbench(ApkWorkload):
     }
 
     parameters = [
-        Parameter('benchmark',
-                  default=benchmark_ids.keys()[0], allowed_values=benchmark_ids.keys(),
+        Parameter('test',
+                  default=test_ids.keys()[0], allowed_values=test_ids.keys(),
                   description='Which Jankbench sub-benchmark to run'),
         Parameter('run_timeout', kind=int, default=10 * 60,
                   description="""
@@ -90,7 +90,7 @@ class Jankbench(ApkWorkload):
             'am start -n com.android.benchmark/.app.RunLocalBenchmarksActivity '
             '--eia com.android.benchmark.EXTRA_ENABLED_BENCHMARK_IDS {0} '
             '--ei com.android.benchmark.EXTRA_RUN_COUNT {1}'
-        ).format(self.benchmark_ids[self.benchmark], self.times)
+        ).format(self.test_ids[self.test], self.times)
 
 
     # def launch_package(self):
