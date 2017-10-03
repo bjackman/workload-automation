@@ -43,7 +43,15 @@ public class UiAutomation extends BaseUiAutomation {
 
     @Test
     public void setup() throws Exception {
-        uiDeviceSwipeRight();
+        uiDeviceSwipeLeft(50);
+
+        UiSelector selector = new UiSelector();
+        UiObject swipeButton = mDevice.findObject(selector.textContains("SWIPE FOR MORE TESTS"));
+
+        if (!swipeButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+            throw new UiObjectNotFoundException("Could not find \"SWIPE FOR MORE TESTS\" button.");
+        }
+        swipeButton.click(); // It says 'swipe', but we can actually click it \m/
     }
 
     @Test

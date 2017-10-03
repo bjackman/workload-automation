@@ -49,7 +49,8 @@ class PCMark(ApkUiautoWorkload):
 
     parameters = [
         Parameter('version', allowed_values=versions, default=versions[0],
-                  description=('Specify the version of PCMark to be run. ')),
+                  description='Specify the version of PCMark to be run. ',
+                  override=True),
     ]
 
 

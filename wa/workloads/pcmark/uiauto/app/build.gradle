@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def packageName = "com.arm.wa.uiauto.vellamo"
+def packageName = "com.arm.wa.uiauto.pcmark"
 
 android {
     compileSdkVersion 25
