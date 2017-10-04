@@ -48,6 +48,7 @@ class Jankbench(ApkWorkload):
     versions = ['1.0']
     activity = '.app.RunLocalBenchmarksActivity'
     package = 'com.android.benchmark'
+    package_names = [package]
 
     target_db_path = '/data/data/{}/databases/BenchmarkResults'.format(package)
 
