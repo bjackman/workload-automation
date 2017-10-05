@@ -171,10 +171,6 @@ class JbRunMonitor(threading.Thread):
         self.run_ended = threading.Event()
         self.stop_event = threading.Event()
 
-        # Not using clear_logcat() because command collects directly, i.e. will
-        # ignore poller.
-        self.target.execute('logcat -c')
-
         cmd = ['logcat', 'ActivityManager:*', 'System.out:I', '*:S', 'BENCH:*']
         if self.target.adb_name:
             self.command = ['adb', '-s', str(self.target.adb_name)] + cmd
