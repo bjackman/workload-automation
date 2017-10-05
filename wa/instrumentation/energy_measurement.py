@@ -16,6 +16,7 @@
 
 # pylint: disable=W0613,E1101
 from __future__ import division
+from copy import deepcopy
 import os
 
 from devlib import DerivedEnergyMeasurements
@@ -46,6 +47,38 @@ class EnergyInstrumentBackend(Plugin):
     def validate_parameters(self, params):
         pass
 
+    def initialize(self, context):
+        if self.backend.instrument.mode != CONTINUOUS:
+            msg = '{} instrument does not support continuous measurement collection'
+            raise ConfigError(msg.format(self.instrument))
+
+        self.instrumentation = self.backend.instrument(self.target, **self.params)
+
+        for channel in self.channels or []:
+            if not self.instrumentation.get_channels(channel):
+                raise ConfigError('No channels found for "{}"'.format(channel))
+
+    def setup(self, context):
+        self.instrumentation.reset(sites=self.sites,
+                                   kinds=self.kinds,
+                                   channels=self.channels)
+
+    def start(self, context):
+        self.instrumentation.start()
+
+    def stop(self, context):
+        self.instrumentation.stop()
+
+    def update_result(self, context):
+        outfile = os.path.join(context.output_directory, 'energy_instrument_output.csv')
+        self.measurement_csv = self.instrumentation.get_data(outfile)
+        context.add_artifact('energy_instrument_output', outfile, 'data')
+        self.extract_metrics(context)
+
+    def extract_metrics(self, context):
+        derived_measurements = DerivedEnergyMeasurements.process(self.measurement_csv)
+        for meas in derived_measurements:
+            context.add_metric(meas.name, meas.value, meas.units)
 
 class DAQBackend(EnergyInstrumentBackend):
 
@@ -156,7 +189,7 @@ class AcmeCapeBackend(EnergyInstrumentBackend):
                   description="""
                   Host name (or IP address) of the ACME cape board.
                   """),
-        Parameter('iio-device', default='iio:device0',
+        Parameter('iio-devices', default=['iio:device0'],
                   description="""
                   """),
         Parameter('buffer-size', kind=int, default=256,
@@ -165,8 +198,66 @@ class AcmeCapeBackend(EnergyInstrumentBackend):
                   """),
     ]
 
-    instrument = AcmeCapeInstrument
+    def initialize(self, context):
+        self.instruments = {}
+        for iio_device in self.iio_devices:
+            params = deepcopy(self.params)
+            params['iio_device'] = iio_device
+            params.pop('iio_devices')
 
+            self.instruments[iio_device] = AcmeCapeInstrument(self.target, **params)
+
+            # Assume all our devices will have all the channel kinds (i.e. all
+            # have power/voltage etc)
+            for channel in self.channels or []:
+                if not self.instrumentation.get_channels(channel):
+                    raise ConfigError('No channels found for "{}"'.format(channel))
+
+    def setup(self, context):
+        for instrument in self.instruments.values():
+            instrument.reset(sites=self.sites,
+                                       kinds=self.kinds,
+                                       channels=self.channels)
+
+    def start(self, context):
+        for instrument in self.instruments.values():
+            instrument.start()
+
+    def stop(self, context):
+        for instrument in self.instruments.values():
+            instrument.stop()
+
+    def update_result(self, context):
+        for iio_device, instrument in self.instruments.itervalues():
+            if len(self.iio_devices) > 1:
+                filename = 'energy_instrument_output_{}.csv'.format(iio_device)
+            else:
+                filename = 'energy_instrument_output.csv'
+            outfile = os.path.join(context.output_directory, filename)
+            self.measurement_csvs[iio_device] = self.instrumentation.get_data(outfile)
+            context.add_artifact('energy_instrument_output', outfile, 'data',
+                                 classifiers={'iio_device': iio_device})
+            self.extract_metrics(context)
+
+    def extract_metrics(self, context):
+        metrics_by_name = {}
+
+        for iio_device in self.instruments.keys():
+            derived_measurements = DerivedEnergyMeasurements.process(self.measurement_csv)
+            for meas in derived_measurements:
+                if len(self.iio_devices) > 1:
+                    metric_name = '{}_{}'.format(meas.name, iio_device)
+                else:
+                    metric_name = meas.name
+                context.add_metric(metric_name, meas.value, meas.units)
+
+                metrics_by_name[meas.name] = meas
+
+        if self.sum_device_metrics and len(self.iio_devices) > 1:
+            for name, metrics in metrics_by_name:
+                units = metrics[0].units
+                value = sum(m.value for m in metrics)
+                context.add_metric(name, value, units)
 
 class EnergyMeasurement(Instrument):
 
@@ -216,10 +307,6 @@ class EnergyMeasurement(Instrument):
         self.backend = self.loader.get_plugin(self.instrument)
         self.params = {}
 
-        if self.backend.instrument.mode != CONTINUOUS:
-            msg = '{} instrument does not support continuous measurement collection'
-            raise ConfigError(msg.format(self.instrument))
-
         supported_params = self.backend.get_parameters()
         for name, value in supported_params.iteritems():
             if name in self.instrument_parameters:
@@ -229,30 +316,19 @@ class EnergyMeasurement(Instrument):
         self.backend.validate_parameters(self.params)
 
     def initialize(self, context):
-        self.instrumentation = self.backend.instrument(self.target, **self.params)
-
-        for channel in self.channels or []:
-            if not self.instrumentation.get_channels(channel):
-                raise ConfigError('No channels found for "{}"'.format(channel))
+        self.backend.initialize(context)
 
     def setup(self, context):
-        self.instrumentation.reset(sites=self.sites,
-                                   kinds=self.kinds,
-                                   channels=self.channels)
+        self.backend.setup(context)
 
     def start(self, context):
-        self.instrumentation.start()
+        self.backend.start(context)
 
     def stop(self, context):
-        self.instrumentation.stop()
+        self.backend.stop(context)
 
     def update_result(self, context):
-        outfile = os.path.join(context.output_directory, 'energy_instrument_output.csv')
-        self.measurement_csv = self.instrumentation.get_data(outfile)
-        context.add_artifact('energy_instrument_output', outfile, 'data')
-        self.extract_metrics(context)
+        self.backend.update_result(context)
 
     def extract_metrics(self, context):
-        derived_measurements = DerivedEnergyMeasurements.process(self.measurement_csv)
-        for meas in derived_measurements:
-            context.add_metric(meas.name, meas.value, meas.units)
+        self.backend.extract_metrics(context)
