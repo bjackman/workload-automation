@@ -21,7 +21,7 @@ from wa.framework.exception import ConfigError, NotFoundError
 from wa.framework.configuration.tree import SectionNode
 from wa.utils.misc import (get_article, merge_config_values)
 from wa.utils.types import (identifier, integer, boolean, list_of_strings,
-                            list_of, toggle_set, obj_dict, enum)
+                            list_of, toggle_set, obj_dict, enum, file_path)
 from wa.utils.serializer import is_pod
 
 
@@ -569,7 +569,7 @@ class MetaConfiguration(Configuration):
             Path to the user directory. This is the location WA will look for
             user configuration, additional plugins and plugin dependencies.
             """,
-            kind=str,
+            kind=file_path,
             default=os.path.join(os.path.expanduser('~'), '.workload_automation'),
         ),
         ConfigurationPoint(
