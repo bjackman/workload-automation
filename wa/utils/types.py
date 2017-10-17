@@ -722,3 +722,7 @@ class ParameterDict(dict):
             else:
                 for k, v in d.iteritems():
                     self[k] = v
+
+def file_path(value):
+    """Handles expansion of paths containing '~'"""
+    return os.path.expanduser(value)
