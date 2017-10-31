@@ -3,7 +3,7 @@ Quickstart
 ==========
 
 This guide will show you how to quickly start running workloads using
-Workload Automation 2.
+Workload Automation 3.
 
 
 Install
@@ -31,7 +31,7 @@ Once you have those, you can install WA with::
 
         sudo -H pip install wlauto
 
-This will install Workload Automation on your system, along with its mandatory 
+This will install Workload Automation on your system, along with its mandatory
 dependencies.
 
 (Optional) Verify installation
@@ -48,7 +48,7 @@ You should see a help message outlining available subcommands.
 --------------------
 
 A large number of WA workloads are installed as APK files. These cannot be
-distributed with WA and so you will need to obtain those separately. 
+distributed with WA and so you will need to obtain those separately.
 
 For more details, please see the :doc:`installation` section.
 
@@ -56,16 +56,16 @@ For more details, please see the :doc:`installation` section.
 Configure Your Device
 =====================
 
-Locate the device configuration file, config.py, under the
-~/.workload_automation directory. Then adjust the device 
+Locate the device configuration file, config.yaml, under the
+~/.workload_automation directory. Then adjust the device
 configuration settings accordingly to the device you are using.
 
 Android
 -------
 
-By default, the device is set to 'generic_android'. WA is configured to work 
-with a generic Android device through ``adb``. If you only have one device listed 
-when you execute ``adb devices``, and your device has a standard Android 
+By default, the device is set to 'generic_android'. WA is configured to work
+with a generic Android device through ``adb``. If you only have one device listed
+when you execute ``adb devices``, and your device has a standard Android
 configuration, then no extra configuration is required.
 
 However, if your device is connected via network, you will have to manually execute
@@ -74,14 +74,13 @@ However, if your device is connected via network, you will have to manually exec
 If you have multiple devices connected, you will need to tell WA which one you
 want it to use. You can do that by setting ``adb_name`` in device_config section.
 
-.. code-block:: python
+.. code-block:: yaml
 
         # ...
 
-        device_config = dict(
-                adb_name = 'abcdef0123456789',
-                # ...
-        )
+        device_config:
+          device: abcdef0123456789
+          # ...
 
         # ...
 
@@ -90,24 +89,23 @@ Linux
 
 First, set the device to 'generic_linux'
 
-.. code-block:: python
+.. code-block:: yaml
 
         # ...
-          device = 'generic_linux'
+        device: generic_linux
         # ...
 
 Find the device_config section and add these parameters
 
-.. code-block:: python
+.. code-block:: yaml
 
         # ...
 
-        device_config = dict(
-                host = '192.168.0.100',
-                username = 'root',
-                password = 'password'
-                # ...
-        )
+        device_config:
+          host: '192.168.0.100'
+          username: 'root'
+          password: 'password'
+          # ...
 
         # ...
 
@@ -123,8 +121,8 @@ Enabling and Disabling Instrumentation
 Some instrumentation tools are enabled after your initial install of WA.
 
 .. note:: Some Linux devices may not be able to run certain instruments
-          provided by WA (e.g. cpufreq is disabled or unsupported by the 
-          device). 
+          provided by WA (e.g. cpufreq is disabled or unsupported by the
+          device).
 
 As a start, keep the 'execution_time' instrument enabled while commenting out
 the rest to disable them.
@@ -148,9 +146,9 @@ the rest to disable them.
 
 
 
-This should give you basic functionality. If you are working with a development 
-board or you need some advanced functionality (e.g. big.LITTLE tuning parameters), 
-additional configuration may be required. Please see the :doc:`device_setup` 
+This should give you basic functionality. If you are working with a development
+board or you need some advanced functionality (e.g. big.LITTLE tuning parameters),
+additional configuration may be required. Please see the :doc:`device_setup`
 section for more details.
 
 
@@ -243,20 +241,20 @@ Examples
 These examples show some useful options with the ``wa run`` command.
 
 To run your own agenda::
-    
+
     wa run <path/to/agenda> (e.g. wa run ~/myagenda.yaml)
 
 To redirect the output to a different directory other than wa_output::
-    
+
     wa run dhrystone -d my_output_directory
 
 To use a different config.py file::
-    
+
     wa run -c myconfig.py dhrystone
 
 To use the same output directory but override existing contents to
 store new dhrystone results::
-    
+
     wa run -f dhrystone
 
 To display verbose output while running memcpy::
@@ -272,13 +270,13 @@ uninstall it::
     sudo pip uninstall wlauto
 
 
-.. Note:: It will *not* remove any user configuration (e.g. the ~/.workload_automation 
+.. Note:: It will *not* remove any user configuration (e.g. the ~/.workload_automation
           directory).
 
 Upgrade
 =======
 
 To upgrade Workload Automation to the latest version via ``pip``, run::
-    
+
     sudo pip install --upgrade --no-deps wlauto
 
