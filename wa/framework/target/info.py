@@ -23,6 +23,7 @@ class TargetInfo(object):
                                                 pod['kernel_version'])
         instance.kernel_config = KernelConfig(pod['kernel_config'])
         instance.platform = PlatformInfo(**pod['platform'])
+        instance.cpufreq_domains = pod['cpufreq_domains']
 
         if pod["target"] == "AndroidTarget":
             instance.screen_resolution = pod['screen_resolution']
@@ -65,6 +66,11 @@ class TargetInfo(object):
                 self.prop = None
                 self.android_id = None
 
+        if target and target.has('cpufreq'):
+            self.cpufreq_domains = list(target.cpufreq.iter_domains())
+        else:
+            self.cpufreq_domains = None
+
     def to_pod(self):
         pod = {}
         pod['target'] = self.target
@@ -78,6 +84,7 @@ class TargetInfo(object):
         pod['kernel_version'] = self.kernel_version.version
         pod['kernel_config'] = dict(self.kernel_config.iteritems())
         pod['platform'] = self.platform._asdict()
+        pod['cpufreq_domains'] = self.cpufreq_domains
 
         if self.target == "AndroidTarget":
             pod['screen_resolution'] = self.screen_resolution
