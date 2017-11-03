@@ -55,17 +55,9 @@ class TraceMetricsProcessor(ResultProcessor):
         ftrace = FTrace(trace_path, scope='custom', events=self.events)
         analyzer = TraceAnalyzer(ftrace, topology)
 
-        wakeup_df = analyzer.idle.event.cpu_wakeup()
-        if topology:
-            for cluster in topology.get_level('cluster'):
-                cluster_name = '-'.join(str(c) for c in cluster)
-                def name(base_name):
-                    return 'trace:{}_{}'.format(base_name, cluster_name)
-
-                value = len(wakeup_df[wakeup_df['cpu'].isin(cluster)])
-                job_output.add_metric(name('cpu_wakeups'), value)
-
-        job_output.add_metric('trace:cpu_wakeups', len(wakeup_df))
+        for cls in MetricGroup.__subclasses__():
+            print cls
+            cls(analyzer, job_output).process_metrics()
 
     def _get_topology(self, target_info):
         core_cluster_idxs = target_info.platform.core_clusters
@@ -82,3 +74,30 @@ class TraceMetricsProcessor(ResultProcessor):
             return Topology(clusters)
         else:
             return None
+
+class MetricGroup(object):
+    def __init__(self, analyzer, output):
+        self.analyzer = analyzer
+        self.output = output
+        self.topology = analyzer.topology
+
+    def add_metric(self, name, value, units=None):
+        name = 'trace:{}'.format(name)
+        self.output.add_metric(name, value, units)
+
+    def add_coregroup_metric(self, group, name, value, units=None):
+        name = '{}_{}'.format(name, '-'.join(str(c) for c in group))
+        self.add_metric(name, value, units)
+
+class WakeupMetricGroup(MetricGroup):
+    def process_metrics(self):
+        wakeup_df = self.analyzer.idle.event.cpu_wakeup()
+
+        if self.topology:
+            for cluster in self.topology.get_level('cluster'):
+                self.add_coregroup_metric(
+                    cluster, 'cpu_wakeups',
+                    len(wakeup_df[wakeup_df['cpu'].isin(cluster)]))
+
+        self.add_metric('cpu_wakeups', len(wakeup_df))
+
