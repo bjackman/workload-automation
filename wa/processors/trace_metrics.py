@@ -20,7 +20,7 @@ try:
 except ImportError:
     libs_available = False
 else:
-    from millhouse import TraceAnalyzer
+    from millhouse import TraceAnalyzer, MissingTraceEventsError
     from trappy import FTrace
     from trappy.stats.Topology import Topology
 
@@ -56,8 +56,11 @@ class TraceMetricsProcessor(ResultProcessor):
         analyzer = TraceAnalyzer(ftrace, topology)
 
         for cls in MetricGroup.__subclasses__():
-            print cls
-            cls(analyzer, job_output).process_metrics()
+            try:
+                cls(analyzer, job_output).process_metrics()
+            except MissingTraceEventsError as e:
+                self.logger.warning('Disabling metric group "{}": {}'
+                                    .format(str(e)))
 
     def _get_topology(self, target_info):
         core_cluster_idxs = target_info.platform.core_clusters
@@ -90,6 +93,8 @@ class MetricGroup(object):
         self.add_metric(name, value, units)
 
 class WakeupMetricGroup(MetricGroup):
+    name = 'cpu-wakeups'
+
     def process_metrics(self):
         wakeup_df = self.analyzer.idle.event.cpu_wakeup()
 
