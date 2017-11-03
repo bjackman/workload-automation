@@ -1,8 +1,11 @@
+from collections import namedtuple
+
 from devlib import AndroidTarget
 from devlib.exception import TargetError
 from devlib.target import KernelConfig, KernelVersion, Cpuinfo
 from devlib.utils.android import AndroidProperties
 
+PlatformInfo = namedtuple('PlatformInfo', ['core_clusters'])
 
 class TargetInfo(object):
 
@@ -19,6 +22,7 @@ class TargetInfo(object):
         instance.kernel_version = KernelVersion(pod['kernel_release'],
                                                 pod['kernel_version'])
         instance.kernel_config = KernelConfig(pod['kernel_config'])
+        instance.platform = PlatformInfo(**pod['platform'])
 
         if pod["target"] == "AndroidTarget":
             instance.screen_resolution = pod['screen_resolution']
@@ -38,6 +42,7 @@ class TargetInfo(object):
             self.is_rooted = target.is_rooted
             self.kernel_version = target.kernel_version
             self.kernel_config = target.config
+            self.platform = PlatformInfo(target.platform.core_clusters)
 
             if isinstance(target, AndroidTarget):
                 self.screen_resolution = target.screen_resolution
@@ -53,6 +58,7 @@ class TargetInfo(object):
             self.is_rooted = None
             self.kernel_version = None
             self.kernel_config = None
+            self.platform = PlatformInfo(None)
 
             if isinstance(target, AndroidTarget):
                 self.screen_resolution = None
@@ -71,6 +77,7 @@ class TargetInfo(object):
         pod['kernel_release'] = self.kernel_version.release
         pod['kernel_version'] = self.kernel_version.version
         pod['kernel_config'] = dict(self.kernel_config.iteritems())
+        pod['platform'] = self.platform._asdict()
 
         if self.target == "AndroidTarget":
             pod['screen_resolution'] = self.screen_resolution
