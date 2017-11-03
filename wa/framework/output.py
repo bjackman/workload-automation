@@ -104,7 +104,10 @@ class Output(object):
 
     def get_artifact_path(self, name):
         artifact = self.get_artifact(name)
-        return self.get_path(artifact.path)
+        if artifact:
+            return self.get_path(artifact.path)
+        else:
+            return None
 
 
 class RunOutput(Output):
