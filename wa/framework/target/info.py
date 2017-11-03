@@ -16,7 +16,7 @@ class TargetInfo(object):
         instance.os_version = pod['os_version']
         instance.abi = pod['abi']
         instance.is_rooted = pod['is_rooted']
-        instance.kernel_version = KernelVersion(pod['kernel_release'], 
+        instance.kernel_version = KernelVersion(pod['kernel_release'],
                                                 pod['kernel_version'])
         instance.kernel_config = KernelConfig(pod['kernel_config'])
 
