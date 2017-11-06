@@ -53,7 +53,9 @@ class TraceMetricsProcessor(ResultProcessor):
         topology = self._get_topology(target_info)
 
         ftrace = FTrace(trace_path, scope='custom', events=self.events)
-        analyzer = TraceAnalyzer(ftrace, topology)
+        analyzer = TraceAnalyzer(ftrace,
+                                 topology=topology,
+                                 cpufreq_domains=target_info.cpufreq_domains)
 
         for cls in MetricGroup.__subclasses__():
             try:
@@ -106,3 +108,22 @@ class WakeupMetricGroup(MetricGroup):
 
         self.add_metric('cpu_wakeups', len(wakeup_df))
 
+
+class FrequencyMetricGroup(MetricGroup):
+    name = 'frequency'
+
+    def process_metrics(self):
+        _df = self.analyzer.cpufreq.stats.frequency_residency()
+        print _df
+        for (cpu, kind), df in _df.iteritems():
+            # frequency_residency just indexes with a single CPU - find that
+            # CPU's domain so we can use that to name the metric
+            [domain] = [d for d in self.analyzer.cpufreq_domains if cpu in d]
+
+            print df
+            df = df.reset_index()
+
+            avg_freq = ((df['frequency'] * df[cpu][kind]).sum()
+                        / df[cpu][kind].sum())
+            self.add_coregroup_metric(
+                domain, 'avg_freq_{}'.format(kind), avg_freq, 'Hz')
