@@ -21,7 +21,8 @@ except ImportError:
     libs_available = False
 else:
     from millhouse import TraceAnalyzer, MissingTraceEventsError
-    from millhouse.utils import drop_consecutive_duplicates as drop_dupes
+    from millhouse.utils import (drop_consecutive_duplicates as drop_dupes,
+                                 integrate_square_wave)
     from trappy import FTrace
     from trappy.stats.Topology import Topology
 
@@ -137,3 +138,19 @@ class FrequencyMetricGroup(MetricGroup):
             df = self.analyzer.cpufreq.signal.cpu_frequency()[domain[0]]
             df = drop_dupes(df)
             self.add_coregroup_metric(domain, 'freq_transition_count', len(df))
+
+class IdlenessMetricGroup(MetricGroup):
+    name = 'idleness'
+
+    def process_metrics(self):
+        cpu_time = self.analyzer.cpuidle.stats.cpu_time()
+        if self.topology:
+            for cluster in self.topology.get_level('cluster'):
+                df = self.analyzer.cpuidle.signal.cluster_active(cluster)
+                self.add_coregroup_metric(
+                    cluster, 'active_time', integrate_square_wave(df['active']), 's')
+
+                self.add_coregroup_metric(
+                    cluster, 'cpu_time', cpu_time['active_time'][cluster].sum(), 'CPU-s')
+
+        self.add_metric('cpu_time', cpu_time['active_time'].sum())
