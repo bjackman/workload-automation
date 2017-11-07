@@ -21,6 +21,7 @@ except ImportError:
     libs_available = False
 else:
     from millhouse import TraceAnalyzer, MissingTraceEventsError
+    from millhouse.utils import drop_consecutive_duplicates as drop_dupes
     from trappy import FTrace
     from trappy.stats.Topology import Topology
 
@@ -132,3 +133,7 @@ class FrequencyMetricGroup(MetricGroup):
 
                 self.add_coregroup_metric(
                     domain, 'avg_freq_{}'.format(kind), avg_freq, 'Hz')
+
+            df = self.analyzer.cpufreq.signal.cpu_frequency()[domain[0]]
+            df = drop_dupes(df)
+            self.add_coregroup_metric(domain, 'freq_transition_count', len(df))
