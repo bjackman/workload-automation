@@ -27,11 +27,13 @@ else:
 from wa import ResultProcessor
 from wa.framework.exception import ResultProcessorError
 
+PLUGIN_NAME = 'trace-metrics' # TODO rename
+
 # TODO: Should find a way to hook into the AFTER_RUN_INIT signal (or something),
 # and use that to check that if we were enabled, so was trace-cmd
 
 class TraceMetricsProcessor(ResultProcessor):
-    name = 'trace-metrics' # TODO rename
+    name = PLUGIN_NAME
 
     description = """ TODO """
 
@@ -90,9 +92,9 @@ class MetricGroup(object):
         self.output = output
         self.topology = analyzer.topology
 
-    def add_metric(self, name, value, units=None):
-        name = 'trace:{}'.format(name)
-        self.output.add_metric(name, value, units)
+    def add_metric(self, name, value, units=None, classifiers={}):
+        classifiers['source'] = PLUGIN_NAME
+        self.output.add_metric(name, value, units, classifiers)
 
     def add_coregroup_metric(self, group, name, value, units=None):
         self.add_metric(name, value, units, classifiers={'core_group': group})
