@@ -154,3 +154,20 @@ class IdlenessMetricGroup(MetricGroup):
                     cluster, 'cpu_time', cpu_time['active_time'][cluster].sum(), 'CPU-s')
 
         self.add_metric('cpu_time', cpu_time['active_time'].sum())
+
+class ThermalMetricGroup(MetricGroup):
+    name = 'thermal'
+
+    def process_metrics(self):
+        df = self.analyzer.thermal.signal.temperature()
+        time = df.index.iloc[-1] - df.index.iloc[0]
+
+        for zone in df:
+            self.add_metric('start_temperature', df[zone].iloc[0], 'mC')
+            self.add_metric('end_temperature', df[zone].iloc[-1], 'mC')
+
+            if time == 0:
+                avg = df[zone].iloc[0]
+            else:
+                avg = df[zone].sum() / time
+            self.add_metric('avg_temperature', avg, 'mC')
