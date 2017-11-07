@@ -31,7 +31,7 @@ from wa.framework.exception import ResultProcessorError
 # and use that to check that if we were enabled, so was trace-cmd
 
 class TraceMetricsProcessor(ResultProcessor):
-    name = 'trace-metrics'
+    name = 'trace-metrics' # TODO rename
 
     description = """ TODO """
 
@@ -52,7 +52,11 @@ class TraceMetricsProcessor(ResultProcessor):
 
         topology = self._get_topology(target_info)
 
+        # TODO: Consider only window of workload execution (devlib injects
+        # markers)
+
         ftrace = FTrace(trace_path, scope='custom', events=self.events)
+
         analyzer = TraceAnalyzer(ftrace,
                                  topology=topology,
                                  cpufreq_domains=target_info.cpufreq_domains)
@@ -91,6 +95,7 @@ class MetricGroup(object):
         self.output.add_metric(name, value, units)
 
     def add_coregroup_metric(self, group, name, value, units=None):
+        # TODO: use classifiers instead
         name = '{}_{}'.format(name, '-'.join(str(c) for c in group))
         self.add_metric(name, value, units)
 
