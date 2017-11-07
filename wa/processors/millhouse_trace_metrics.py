@@ -27,12 +27,12 @@ else:
 from wa import ResultProcessor
 from wa.framework.exception import ResultProcessorError
 
-PLUGIN_NAME = 'trace-metrics' # TODO rename
+PLUGIN_NAME = 'millhouse-trace-metrics'
 
 # TODO: Should find a way to hook into the AFTER_RUN_INIT signal (or something),
 # and use that to check that if we were enabled, so was trace-cmd
 
-class TraceMetricsProcessor(ResultProcessor):
+class MillhouseTraceMetricsProcessor(ResultProcessor):
     name = PLUGIN_NAME
 
     description = """ TODO """
