@@ -113,17 +113,17 @@ class FrequencyMetricGroup(MetricGroup):
     name = 'frequency'
 
     def process_metrics(self):
-        _df = self.analyzer.cpufreq.stats.frequency_residency()
-        print _df
-        for (cpu, kind), df in _df.iteritems():
-            # frequency_residency just indexes with a single CPU - find that
-            # CPU's domain so we can use that to name the metric
-            [domain] = [d for d in self.analyzer.cpufreq_domains if cpu in d]
+        for domain in self.analyzer.cpufreq.domains:
+            for kind in ['total', 'active']:
+                df = (self.analyzer.cpufreq.stats
+                      .frequency_residency(domain).reset_index())
 
-            print df
-            df = df.reset_index()
+                time = df[kind].sum()
+                if time == 0:
+                    print 'zero time'
+                    avg_freq = None
+                else:
+                    avg_freq = ((df['frequency'] * df[kind]).sum() / time)
 
-            avg_freq = ((df['frequency'] * df[cpu][kind]).sum()
-                        / df[cpu][kind].sum())
-            self.add_coregroup_metric(
-                domain, 'avg_freq_{}'.format(kind), avg_freq, 'Hz')
+                self.add_coregroup_metric(
+                    domain, 'avg_freq_{}'.format(kind), avg_freq, 'Hz')
