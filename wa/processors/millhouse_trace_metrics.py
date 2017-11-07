@@ -70,7 +70,7 @@ class MillhouseTraceMetricsProcessor(ResultProcessor):
                 cls(analyzer, job_output).process_metrics()
             except MissingTraceEventsError as e:
                 self.logger.warning('Disabling metric group "{}": {}'
-                                    .format(str(e)))
+                                    .format(cls.name, str(e)))
 
     def _get_topology(self, target_info):
         core_cluster_idxs = target_info.platform.core_clusters
