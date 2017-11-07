@@ -103,7 +103,7 @@ class WakeupMetricGroup(MetricGroup):
     name = 'cpu-wakeups'
 
     def process_metrics(self):
-        wakeup_df = self.analyzer.idle.event.cpu_wakeup()
+        wakeup_df = self.analyzer.cpuidle.event.cpu_wakeup()
 
         if self.topology:
             for cluster in self.topology.get_level('cluster'):
