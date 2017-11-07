@@ -95,9 +95,7 @@ class MetricGroup(object):
         self.output.add_metric(name, value, units)
 
     def add_coregroup_metric(self, group, name, value, units=None):
-        # TODO: use classifiers instead
-        name = '{}_{}'.format(name, '-'.join(str(c) for c in group))
-        self.add_metric(name, value, units)
+        self.add_metric(name, value, units, classifiers={'core_group': group})
 
 class WakeupMetricGroup(MetricGroup):
     name = 'cpu-wakeups'
