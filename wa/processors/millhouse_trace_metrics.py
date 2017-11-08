@@ -28,6 +28,8 @@ else:
     from trappy import FTrace
     from trappy.stats.Topology import Topology
 
+from devlib.trace.ftrace import TRACE_MARKER_START, TRACE_MARKER_STOP
+
 from wa import ResultProcessor
 from wa.framework.exception import ResultProcessorError
 
@@ -41,7 +43,7 @@ class MillhouseTraceMetricsProcessor(ResultProcessor):
 
     description = """ TODO """
 
-    events = ['cpu_idle', 'cpu_frequency']
+    events = ['cpu_idle', 'cpu_frequency', 'tracing_mark_write', 'print']
 
     def validate(self):
         if not libs_available:
@@ -58,12 +60,24 @@ class MillhouseTraceMetricsProcessor(ResultProcessor):
 
         topology = self._get_topology(target_info)
 
-        # TODO: Consider only window of workload execution (devlib injects
-        # markers)
+        ftrace = FTrace(trace_path, events=self.events)
 
-        ftrace = FTrace(trace_path, scope='custom', events=self.events)
+        start_time, end_time = (0, ftrace.get_duration())
+        df = ftrace.tracing_mark_write.data_frame.append(ftrace.print_.data_frame)
+        times = {}
+        for marker in [TRACE_MARKER_START, TRACE_MARKER_STOP]:
+            events = df[df['string'] == marker]
+            if len(events) > 1:
+                raise ResultProcessorError(
+                    'Found multiple {} events in trace'.format(marker))
+            if len(events) == 0:
+                raise ResultProcessorError(
+                    'Found no {} event in trace'.format(marker))
+            [times[marker]] = events.index.tolist()
+        window = (times[TRACE_MARKER_START], times[TRACE_MARKER_STOP])
 
         analyzer = TraceAnalyzer(ftrace,
+                                 window=window,
                                  topology=topology,
                                  cpufreq_domains=target_info.cpufreq_domains)
 
