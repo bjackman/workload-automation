@@ -20,6 +20,8 @@ try:
 except ImportError:
     libs_available = False
 else:
+    import numpy as np
+
     from millhouse import TraceAnalyzer, MissingTraceEventsError
     from millhouse.utils import (drop_consecutive_duplicates as drop_dupes,
                                  integrate_square_wave)
@@ -127,8 +129,7 @@ class FrequencyMetricGroup(MetricGroup):
 
                 time = df[kind].sum()
                 if time == 0:
-                    print 'zero time'
-                    avg_freq = None
+                    avg_freq = np.nan
                 else:
                     avg_freq = ((df['frequency'] * df[kind]).sum() / time)
 
