@@ -148,7 +148,7 @@ class FrequencyMetricGroup(MetricGroup):
                     avg_freq = ((df['frequency'] * df[kind]).sum() / time)
 
                 self.add_coregroup_metric(
-                    domain, 'avg_freq_{}'.format(kind), avg_freq, 'Hz')
+                    domain, 'avg_freq_{}'.format(kind), int(avg_freq), 'Hz')
 
             df = self.analyzer.cpufreq.signal.cpu_frequency()[domain[0]]
             df = drop_dupes(df)
